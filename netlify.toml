@@ -1,0 +1,7 @@
+# Static files live in public/, the API lives in netlify/functions/.
+# No build step is needed — Netlify installs the dependency and bundles the
+# function for you when the repo is connected.
+
+[build]
+  publish = "public"
+  functions = "netlify/functions"
