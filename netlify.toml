@@ -1,15 +1,13 @@
-# The site is published straight from the repo root, so index.html can sit
-# right next to this file. The function is picked up from netlify/functions
-# and answers at /api/playlist.
+# The site is published from the folder below; the functions live in
+# netlify/functions and declare their own URLs:
+#
+#   store.mjs  ->  /api/playlist
+#   ping.mjs   ->  /api/ping
+#
+# Do NOT add a redirect for /api/playlist here. A forced redirect shadows the
+# function's own route, and if it points at a filename that no longer exists
+# you get a 404 that looks like a missing function.
 
 [build]
-  publish = "."
+  publish = "public"
   functions = "netlify/functions"
-
-# Belt and braces: the function declares this route itself, and this redirect
-# guarantees it even if that route config is ignored.
-[[redirects]]
-  from = "/api/playlist"
-  to = "/.netlify/functions/playlist"
-  status = 200
-  force = true
