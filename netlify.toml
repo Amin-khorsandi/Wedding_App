@@ -3,5 +3,5 @@
 # and answers at /api/playlist.
 
 [build]
-  publish = "."
+  publish = "public"
   functions = "netlify/functions"
