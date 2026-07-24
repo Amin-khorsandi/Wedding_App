@@ -1,9 +1,8 @@
-import { getStore } from "@netlify/blobs";
-
 /**
  * The playlist API. One JSON document in Netlify Blobs holds the whole list,
  * which is the right shape for ~50 rows and a few dozen guests.
  *
+ * GET  /api/playlist   a diagnostic — open it in a browser to check a deploy
  * POST /api/playlist   { op: "list" }
  *                      { op: "seed",   data: [...] }        // only if empty
  *                      { op: "vote",   id, kind, delta }
@@ -12,12 +11,26 @@ import { getStore } from "@netlify/blobs";
  *                      { op: "delete", id }
  * Every response is { ok: true, songs: [...] } so the client always ends up
  * holding exactly what the store holds.
+ *
+ * The blobs package is imported inside the handler on purpose. A top-level
+ * import that fails takes the whole function down with an unexplained 502;
+ * this way any problem comes back as a message you can actually read.
  */
 
 const KEY = "playlist";
 const MAX = 10;
 
-const store = () => getStore({ name: "playlist", consistency: "strong" });
+let _getStore = null;
+
+async function store(){
+  if(!_getStore){
+    const mod = await import("@netlify/blobs");
+    _getStore = mod.getStore;
+    if(typeof _getStore !== "function") throw new Error("getStore missing from @netlify/blobs");
+  }
+  try { return _getStore({ name: "playlist", consistency: "strong" }); }
+  catch { return _getStore("playlist"); }        // older signature, just in case
+}
 
 const uid = () => Math.random().toString(36).slice(2, 12);
 const clamp = n => Math.max(0, Math.min(MAX, parseInt(n, 10) || 0));
@@ -74,12 +87,20 @@ function apply(rows, b) {
   }
 }
 
+const json = (body, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json", "cache-control": "no-store" }
+  });
+
 export default async req => {
-  const json = (body, status = 200) =>
-    new Response(JSON.stringify(body), {
-      status,
-      headers: { "content-type": "application/json", "cache-control": "no-store" }
-    });
+  // Open this in a browser to see whether the deploy is healthy.
+  if (req.method === "GET") {
+    const diag = { node: process.version, blobs: "ok", songs: 0 };
+    try { diag.songs = (await read(await store())).length; }
+    catch (err) { diag.blobs = String(err?.message || err); }
+    return json({ ok: true, diag });
+  }
 
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
 
@@ -88,7 +109,7 @@ export default async req => {
   catch { return json({ ok: false, error: "bad JSON" }, 400); }
 
   try {
-    const s = store();
+    const s = await store();
     let songs = await read(s);
 
     if (body.op && body.op !== "list") {
