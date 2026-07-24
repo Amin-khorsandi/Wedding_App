@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -286,7 +285,8 @@ const MAX = 10, DBL = 320;   // vote ceiling, double-tap window in ms
    saving on this device — same file, no edits needed. */
 /* Two possible addresses for the function: the tidy one from its own route
    config, and the built-in one that always exists. Whichever answers wins. */
-const ENDPOINTS = ["/api/playlist", "/.netlify/functions/playlist"];
+const ENDPOINTS = ["/api/playlist", "/.netlify/functions/store"];
+const PINGS     = ["/api/ping", "/.netlify/functions/ping"];
 let API = null, cloudOn = false, online = false, lastLocal = 0, syncing = false, why = "";
 const cloud = () => cloudOn;
 
@@ -304,8 +304,20 @@ async function api(body){
       API = url; why = ""; return d.songs || [];
     } catch(e){ err = e.message || "no response"; }
   }
-  API = null; why = err;
+  API = null;
+  why = err;
   console.warn("[playlist] sync failed:", err);
+  // Work out which half is broken so the badge can say something useful.
+  (async () => {
+    for(const p of PINGS){
+      try {
+        const r = await fetch(p);
+        if(r.ok){ why = "functions OK, storage failed · " + err; badge(); return; }
+      } catch(e){}
+    }
+    why = "no function deployed · " + err;
+    badge();
+  })();
   throw new Error(err);
 }
 const norm = rows => rows.map(s => ({
