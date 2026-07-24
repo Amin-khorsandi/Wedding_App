@@ -3,5 +3,13 @@
 # and answers at /api/playlist.
 
 [build]
-  publish = "public"
+  publish = "."
   functions = "netlify/functions"
+
+# Belt and braces: the function declares this route itself, and this redirect
+# guarantees it even if that route config is ignored.
+[[redirects]]
+  from = "/api/playlist"
+  to = "/.netlify/functions/playlist"
+  status = 200
+  force = true
