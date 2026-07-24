@@ -1,7 +1,7 @@
-# Static files live in public/, the API lives in netlify/functions/.
-# No build step is needed — Netlify installs the dependency and bundles the
-# function for you when the repo is connected.
+# The site is published straight from the repo root, so index.html can sit
+# right next to this file. The function is picked up from netlify/functions
+# and answers at /api/playlist.
 
 [build]
-  publish = "public"
+  publish = "."
   functions = "netlify/functions"
