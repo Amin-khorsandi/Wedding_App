@@ -1,8 +1,0 @@
-{
-  "name": "ya-ali-goftimo-playlist",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "@netlify/blobs": "latest"
-  }
-}
