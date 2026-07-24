@@ -1,7 +1,7 @@
 # The site is published from the folder below; the functions live in
 # netlify/functions and declare their own URLs:
 #
-#   store.mjs  ->  /api/playlist
+#   store.mjs  ->  /api/playlist 
 #   ping.mjs   ->  /api/ping
 #
 # Do NOT add a redirect for /api/playlist here. A forced redirect shadows the
