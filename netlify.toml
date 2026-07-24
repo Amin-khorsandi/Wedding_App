@@ -1,0 +1,7 @@
+# The site is published straight from the repo root, so index.html can sit
+# right next to this file. The function is picked up from netlify/functions
+# and answers at /api/playlist.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
